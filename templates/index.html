@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inbound hourly report</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="eyebrow">INBOUND OPERATIONS</div>
+      <h1>Hourly report</h1>
+      <p>Choose a shift to start or update its report.</p>
+    </header>
+
+    <section class="shift-grid" aria-label="Select a shift">
+      {% for key, shift in shifts.items() %}
+      <a class="shift-card {% if selected == key %}selected{% endif %}" href="/?shift={{ key }}&report_date={{ report_date }}">
+        <span class="shift-label">{{ key }}</span>
+        <strong>{{ shift.days }}</strong>
+        <span>{{ shift.start }} – {{ shift.end }}</span>
+      </a>
+      {% endfor %}
+    </section>
+
+    {% if selected %}
+    <section class="report-panel">
+      <div class="panel-heading">
+        <div>
+          <div class="eyebrow">{{ shifts[selected].days }}</div>
+          <h2>{{ selected }} hourly report</h2>
+        </div>
+        <form method="get" class="date-picker">
+          <input type="hidden" name="shift" value="{{ selected }}">
+          <label for="report_date">Report date</label>
+          <input id="report_date" type="date" name="report_date" value="{{ report_date }}" onchange="this.form.submit()">
+        </form>
+      </div>
+
+      {% if request.query_params.get('saved') %}<div class="success" role="status">Report saved. Tiny victory, very official.</div>{% endif %}
+      <form method="post" action="/reports/save">
+        <input type="hidden" name="shift" value="{{ selected }}">
+        <input type="hidden" name="report_date" value="{{ report_date }}">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Hour</th><th>Drax cases <span class="tag">AUTO</span></th><th>Drax pallets <span class="tag">AUTO</span></th><th>Labor hours</th><th>Notes / blockers</th></tr></thead>
+            <tbody>
+              {% for row in rows %}
+              <tr>
+                <td><input type="hidden" name="hours" value="{{ row.hour }}"><strong>{{ row.label }}</strong></td>
+                <td><input name="cases" inputmode="numeric" value="{{ row.cases or '' }}" placeholder="—" aria-label="Cases for {{ row.label }}"></td>
+                <td><input name="pallets" inputmode="numeric" value="{{ row.pallets or '' }}" placeholder="—" aria-label="Pallets for {{ row.label }}"></td>
+                <td><input name="labor" inputmode="decimal" value="{{ row.labor or '' }}" placeholder="—" aria-label="Labor hours for {{ row.label }}"></td>
+                <td><input name="notes" value="{{ row.notes or '' }}" placeholder="Add a note" aria-label="Notes for {{ row.label }}"></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="actions"><button type="submit">Save report</button><span>Automatic Drax fields will be connected in the next step.</span></div>
+      </form>
+    </section>
+    {% else %}
+    <section class="empty-state"><div class="empty-icon">↗</div><h2>Pick a shift</h2><p>Your hourly report will appear here.</p></section>
+    {% endif %}
+  </main>
+</body>
+</html>
