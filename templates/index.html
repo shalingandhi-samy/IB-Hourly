@@ -17,6 +17,19 @@
         <span id="current-datetime">Loading current time…</span>
       </div>
     </header>
+    {% if selected %}
+    <section class="summary-bar" aria-label="Shift summary">
+      <div class="summary-item site-item"><span class="summary-label">Site</span><strong>PHL5</strong></div>
+      <div class="summary-item"><span class="summary-label">Shift Name</span><strong>{{ selected }}</strong></div>
+      <div class="summary-item"><span class="summary-label">28-day LP Volume</span><strong>—</strong></div>
+      <div class="summary-item"><span class="summary-label">28-day LP Total UPH</span><strong>—</strong></div>
+      <div class="summary-item"><span class="summary-label">Backlog Units</span><strong>—</strong></div>
+      <div class="summary-item"><span class="summary-label">Shift Date</span><strong>{{ report_date }}</strong></div>
+      <div class="summary-item"><span class="summary-label">Shift Length</span><strong>{{ shifts[selected].length }}</strong></div>
+      <div class="summary-item"><span class="summary-label">IB UPH</span><strong>—</strong></div>
+    </section>
+    {% endif %}
+
     {% if not selected %}
     <section class="shift-grid" aria-label="Select a shift">
       {% for key, shift in shifts.items() %}
