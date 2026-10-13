@@ -1,1 +1,2 @@
 .long-kpi{font-size:.58rem!important;letter-spacing:-.03em;white-space:nowrap}
+.kpi-table select{width:100%;min-width:0;border:1px solid #d5dfe4;border-radius:7px;padding:6px 2px;background:#fff;color:#17202a;font:inherit;font-size:.68rem;text-align:center}
