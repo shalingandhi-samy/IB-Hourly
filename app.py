@@ -76,8 +76,8 @@ def hour_rows(shift_key: str, report_date: str):
 
 
 def shift_totals(rows):
-    total_kpis = {"Goal Volume", "IB Volume", "Drax Hours", "Volume hit/miss"}
-    average_kpis = {"Hour %", "IB UPH", "Decant UPH", "Unload UPH"}
+    total_kpis = {"Hour %", "Goal Volume", "IB Volume", "Drax Hours", "Volume hit/miss"}
+    average_kpis = {"IB UPH", "Decant UPH", "Unload UPH"}
     latest_kpis = {"Cumulative Volume hit/miss", "Remedy HC"}
     totals = {}
     for kpi in KPI_NAMES:
