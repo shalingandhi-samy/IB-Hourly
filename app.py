@@ -11,10 +11,10 @@ BASE_DIR = Path(__file__).parent
 DB_PATH = BASE_DIR / "reports.db"
 
 SHIFTS = {
-    "S1": {"name": "S1", "days": "Monday–Thursday", "start": "7:00 AM", "end": "5:30 PM", "length": "10.5 hrs", "slot_minutes": list(range(7 * 60, 17 * 60 + 31, 60)) + [17 * 60 + 30]},
-    "S2": {"name": "S2", "days": "Monday–Thursday", "start": "6:00 PM", "end": "4:30 AM", "length": "10.5 hrs", "slot_minutes": list(range(18 * 60, 24 * 60, 60)) + list(range(0, 4 * 60 + 31, 60)) + [4 * 60 + 30]},
-    "S4": {"name": "S4", "days": "Friday–Sunday", "start": "7:00 AM", "end": "7:00 PM", "length": "12 hrs", "slot_minutes": list(range(7 * 60, 19 * 60 + 1, 60))},
-    "S5": {"name": "S5", "days": "Friday–Sunday", "start": "7:00 PM", "end": "7:00 AM", "length": "12 hrs", "slot_minutes": list(range(19 * 60, 24 * 60, 60)) + list(range(0, 7 * 60 + 1, 60))},
+    "S1": {"name": "S1", "days": "Monday–Thursday", "start": "7:00 AM", "end": "5:30 PM", "length": "10.5 hrs", "slot_minutes": list(range(7 * 60, 17 * 60 + 1, 60))},
+    "S2": {"name": "S2", "days": "Monday–Thursday", "start": "6:00 PM", "end": "4:30 AM", "length": "10.5 hrs", "slot_minutes": list(range(18 * 60, 24 * 60, 60)) + list(range(0, 4 * 60 + 1, 60))},
+    "S4": {"name": "S4", "days": "Friday–Sunday", "start": "7:00 AM", "end": "7:00 PM", "length": "12 hrs", "slot_minutes": list(range(7 * 60, 19 * 60, 60))},
+    "S5": {"name": "S5", "days": "Friday–Sunday", "start": "7:00 PM", "end": "7:00 AM", "length": "12 hrs", "slot_minutes": list(range(19 * 60, 24 * 60, 60)) + list(range(0, 7 * 60, 60))},
 }
 
 app = FastAPI(title="Inbound Hourly Report")
