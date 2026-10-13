@@ -96,6 +96,11 @@
             </tbody>
           </table>
         </div>
+        <div class="notes-grid" aria-label="Shift notes">
+          {% for block in range(1, 4) %}
+          <label class="notes-card">Notes {{ block }}<span>{% if block == 1 %}Hours 1–4{% elif block == 2 %}Hours 5–8{% else %}Remaining hours{% endif %}</span><textarea name="block_notes" placeholder="What happened during this block?">{{ shift_notes.get(block, '') }}</textarea></label>
+          {% endfor %}
+        </div>
         <div class="actions"><button type="submit">Clip report</button><span>Save the report, then capture this view and share it in Teams.</span></div>
       </form>
     </section>

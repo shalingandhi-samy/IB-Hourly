@@ -41,6 +41,15 @@ def db():
             PRIMARY KEY (report_date, shift, hour, kpi)
         )
     """)
+    connection.execute("""
+        CREATE TABLE IF NOT EXISTS shift_notes (
+            report_date TEXT NOT NULL,
+            shift TEXT NOT NULL,
+            block INTEGER NOT NULL,
+            notes TEXT DEFAULT '',
+            PRIMARY KEY (report_date, shift, block)
+        )
+    """)
     return connection
 
 
@@ -91,6 +100,16 @@ def shift_totals(rows):
     return totals
 
 
+def saved_shift_notes(shift: str, report_date: str):
+    connection = db()
+    rows = connection.execute(
+        "SELECT block, notes FROM shift_notes WHERE report_date = ? AND shift = ? ORDER BY block",
+        (report_date, shift),
+    ).fetchall()
+    connection.close()
+    return {row["block"]: row["notes"] for row in rows}
+
+
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request, shift: str = "", report_date: str = ""):
     selected = shift if shift in SHIFTS else ""
@@ -99,7 +118,7 @@ def home(request: Request, shift: str = "", report_date: str = ""):
     return templates.TemplateResponse(request, "index.html", {
         "request": request, "shifts": SHIFTS, "selected": selected,
         "report_date": chosen_date, "rows": rows, "kpi_names": KPI_NAMES,
-        "shift_totals": shift_totals(rows),
+        "shift_totals": shift_totals(rows), "shift_notes": saved_shift_notes(selected, chosen_date) if selected else {},
     })
 
 
@@ -107,6 +126,7 @@ def home(request: Request, shift: str = "", report_date: str = ""):
 def save_report(
     shift: str = Form(...), report_date: str = Form(...),
     hours: list[int] = Form(default=[]), kpi_values: list[str] = Form(default=[]),
+    block_notes: list[str] = Form(default=[]),
 ):
     if shift not in SHIFTS:
         return RedirectResponse("/", status_code=303)
@@ -121,6 +141,12 @@ def save_report(
                 VALUES (?, ?, ?, ?, ?)
                 ON CONFLICT(report_date, shift, hour, kpi) DO UPDATE SET value=excluded.value
             """, (report_date, shift, hour, kpi, kpi_values[value_index]))
+    for block, notes in enumerate(block_notes, start=1):
+        connection.execute("""
+            INSERT INTO shift_notes (report_date, shift, block, notes)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(report_date, shift, block) DO UPDATE SET notes=excluded.notes
+        """, (report_date, shift, block, notes))
     connection.commit()
     connection.close()
     return RedirectResponse(f"/?shift={shift}&report_date={report_date}&saved=1", status_code=303)
