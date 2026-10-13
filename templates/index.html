@@ -12,17 +12,22 @@
       <div class="eyebrow">INBOUND OPERATIONS</div>
       <h1>Hourly report</h1>
       <p>Choose a shift to start or update its report.</p>
+      <div class="header-status" aria-live="polite">
+        <span class="status-dot"></span>
+        <span id="current-datetime">Loading current time…</span>
+      </div>
     </header>
-
+    {% if not selected %}
     <section class="shift-grid" aria-label="Select a shift">
       {% for key, shift in shifts.items() %}
-      <a class="shift-card {% if selected == key %}selected{% endif %}" href="/?shift={{ key }}&report_date={{ report_date }}">
+      <a class="shift-card" href="/?shift={{ key }}&report_date={{ report_date }}">
         <span class="shift-label">{{ key }}</span>
         <strong>{{ shift.days }}</strong>
         <span>{{ shift.start }} – {{ shift.end }}</span>
       </a>
       {% endfor %}
     </section>
+    {% endif %}
 
     {% if selected %}
     <section class="report-panel">
@@ -31,11 +36,14 @@
           <div class="eyebrow">{{ shifts[selected].days }}</div>
           <h2>{{ selected }} hourly report</h2>
         </div>
-        <form method="get" class="date-picker">
+        <div class="panel-actions">
+          <a class="home-button" href="/?report_date={{ report_date }}">← Home</a>
+          <form method="get" class="date-picker">
           <input type="hidden" name="shift" value="{{ selected }}">
           <label for="report_date">Report date</label>
           <input id="report_date" type="date" name="report_date" value="{{ report_date }}" onchange="this.form.submit()">
         </form>
+        </div>
       </div>
 
       {% if request.query_params.get('saved') %}<div class="success" role="status">Report saved. Tiny victory, very official.</div>{% endif %}
@@ -43,27 +51,48 @@
         <input type="hidden" name="shift" value="{{ selected }}">
         <input type="hidden" name="report_date" value="{{ report_date }}">
         <div class="table-wrap">
-          <table>
-            <thead><tr><th>Hour</th><th>Drax cases <span class="tag">AUTO</span></th><th>Drax pallets <span class="tag">AUTO</span></th><th>Labor hours</th><th>Notes / blockers</th></tr></thead>
-            <tbody>
-              {% for row in rows %}
+          <table class="kpi-table">
+            <thead>
               <tr>
-                <td><input type="hidden" name="hours" value="{{ row.hour }}"><strong>{{ row.label }}</strong></td>
-                <td><input name="cases" inputmode="numeric" value="{{ row.cases or '' }}" placeholder="—" aria-label="Cases for {{ row.label }}"></td>
-                <td><input name="pallets" inputmode="numeric" value="{{ row.pallets or '' }}" placeholder="—" aria-label="Pallets for {{ row.label }}"></td>
-                <td><input name="labor" inputmode="decimal" value="{{ row.labor or '' }}" placeholder="—" aria-label="Labor hours for {{ row.label }}"></td>
-                <td><input name="notes" value="{{ row.notes or '' }}" placeholder="Add a note" aria-label="Notes for {{ row.label }}"></td>
+                <th class="kpi-name">KPI</th>
+                {% for row in rows %}<th><input type="hidden" name="hours" value="{{ row.hour }}">{{ row.label }}</th>{% endfor %}
               </tr>
-              {% endfor %}
+            </thead>
+            <tbody>
+              <tr>
+                <th class="kpi-name">Drax cases <span class="tag">AUTO</span></th>
+                {% for row in rows %}<td><input name="cases" inputmode="numeric" value="{{ row.cases or '' }}" placeholder="—" aria-label="Cases for {{ row.label }}"></td>{% endfor %}
+              </tr>
+              <tr>
+                <th class="kpi-name">Drax pallets <span class="tag">AUTO</span></th>
+                {% for row in rows %}<td><input name="pallets" inputmode="numeric" value="{{ row.pallets or '' }}" placeholder="—" aria-label="Pallets for {{ row.label }}"></td>{% endfor %}
+              </tr>
+              <tr>
+                <th class="kpi-name">Labor hours</th>
+                {% for row in rows %}<td><input name="labor" inputmode="decimal" value="{{ row.labor or '' }}" placeholder="—" aria-label="Labor hours for {{ row.label }}"></td>{% endfor %}
+              </tr>
+              <tr>
+                <th class="kpi-name">Notes / blockers</th>
+                {% for row in rows %}<td><input name="notes" value="{{ row.notes or '' }}" placeholder="Add a note" aria-label="Notes for {{ row.label }}"></td>{% endfor %}
+              </tr>
             </tbody>
           </table>
         </div>
         <div class="actions"><button type="submit">Save report</button><span>Automatic Drax fields will be connected in the next step.</span></div>
       </form>
     </section>
-    {% else %}
-    <section class="empty-state"><div class="empty-icon">↗</div><h2>Pick a shift</h2><p>Your hourly report will appear here.</p></section>
     {% endif %}
   </main>
+  <script>
+    const clock = document.getElementById("current-datetime");
+    const updateClock = () => {
+      clock.textContent = new Intl.DateTimeFormat(undefined, {
+        weekday: "long", year: "numeric", month: "long", day: "numeric",
+        hour: "numeric", minute: "2-digit", second: "2-digit"
+      }).format(new Date());
+    };
+    updateClock();
+    setInterval(updateClock, 1000);
+  </script>
 </body>
 </html>
