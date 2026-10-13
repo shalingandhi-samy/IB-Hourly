@@ -72,22 +72,12 @@
               </tr>
             </thead>
             <tbody>
+              {% for kpi in kpi_names %}
               <tr>
-                <th class="kpi-name">Drax cases <span class="tag">AUTO</span></th>
-                {% for row in rows %}<td><input name="cases" inputmode="numeric" value="{{ row.cases or '' }}" placeholder="—" aria-label="Cases for {{ row.label }}"></td>{% endfor %}
+                <th class="kpi-name">{{ kpi }}</th>
+                {% for row in rows %}<td><input name="kpi_values" value="{{ row.kpis.get(kpi, '') }}" placeholder="—" aria-label="{{ kpi }} for {{ row.label }}"></td>{% endfor %}
               </tr>
-              <tr>
-                <th class="kpi-name">Drax pallets <span class="tag">AUTO</span></th>
-                {% for row in rows %}<td><input name="pallets" inputmode="numeric" value="{{ row.pallets or '' }}" placeholder="—" aria-label="Pallets for {{ row.label }}"></td>{% endfor %}
-              </tr>
-              <tr>
-                <th class="kpi-name">Labor hours</th>
-                {% for row in rows %}<td><input name="labor" inputmode="decimal" value="{{ row.labor or '' }}" placeholder="—" aria-label="Labor hours for {{ row.label }}"></td>{% endfor %}
-              </tr>
-              <tr>
-                <th class="kpi-name">Notes / blockers</th>
-                {% for row in rows %}<td><input name="notes" value="{{ row.notes or '' }}" placeholder="Add a note" aria-label="Notes for {{ row.label }}"></td>{% endfor %}
-              </tr>
+              {% endfor %}
             </tbody>
           </table>
         </div>
