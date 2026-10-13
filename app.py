@@ -66,6 +66,31 @@ def hour_rows(shift_key: str, report_date: str):
     return result
 
 
+def shift_totals(rows):
+    total_kpis = {"Goal Volume", "IB Volume", "Drax Hours", "Volume hit/miss"}
+    average_kpis = {"Hour %", "IB UPH", "Decant UPH", "Unload UPH"}
+    latest_kpis = {"Cumulative Volume hit/miss", "Remedy HC"}
+    totals = {}
+    for kpi in KPI_NAMES:
+        values = []
+        for row in rows:
+            raw = row["kpis"].get(kpi, "")
+            try:
+                values.append(float(raw))
+            except (TypeError, ValueError):
+                pass
+        if kpi in total_kpis and values:
+            result = sum(values)
+        elif kpi in average_kpis and values:
+            result = sum(values) / len(values)
+        elif kpi in latest_kpis:
+            result = next((row["kpis"].get(kpi) for row in reversed(rows) if row["kpis"].get(kpi, "") != ""), "")
+        else:
+            result = ""
+        totals[kpi] = f"{result:g}" if isinstance(result, float) else result
+    return totals
+
+
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request, shift: str = "", report_date: str = ""):
     selected = shift if shift in SHIFTS else ""
@@ -74,6 +99,7 @@ def home(request: Request, shift: str = "", report_date: str = ""):
     return templates.TemplateResponse(request, "index.html", {
         "request": request, "shifts": SHIFTS, "selected": selected,
         "report_date": chosen_date, "rows": rows, "kpi_names": KPI_NAMES,
+        "shift_totals": shift_totals(rows),
     })
 
 

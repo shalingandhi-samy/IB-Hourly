@@ -68,14 +68,14 @@
             <thead>
               <tr>
                 <th class="kpi-name">KPI</th>
-                {% for row in rows %}<th><input type="hidden" name="hours" value="{{ row.hour }}">{{ row.label }}</th>{% endfor %}
+                {% for row in rows %}<th><input type="hidden" name="hours" value="{{ row.hour }}">{{ row.label }}</th>{% endfor %}<th class="total-column">Shift to date</th>
               </tr>
             </thead>
             <tbody>
               {% for kpi in kpi_names %}
               <tr>
                 <th class="kpi-name">{{ kpi }}</th>
-                {% for row in rows %}<td><input name="kpi_values" value="{{ row.kpis.get(kpi, '') }}" placeholder="—" aria-label="{{ kpi }} for {{ row.label }}"></td>{% endfor %}
+                {% for row in rows %}<td><input name="kpi_values" value="{{ row.kpis.get(kpi, '') }}" placeholder="—" aria-label="{{ kpi }} for {{ row.label }}"></td>{% endfor %}<td class="total-column"><strong>{{ shift_totals.get(kpi) or '—' }}</strong></td>
               </tr>
               {% endfor %}
             </tbody>
