@@ -77,7 +77,7 @@
               {% for kpi in kpi_names[:2] %}
               <tr>
                 <th class="kpi-name {% if kpi in ['Volume hit/miss', 'Cumulative Volume hit/miss'] %}long-kpi{% endif %}">{{ kpi }}</th>
-                {% for row in rows %}<td>{% if selected == 'S2' and kpi == 'Hour Profile' %}<select class="hour-profile" data-index="{{ loop.index0 }}" name="kpi_values" aria-label="{{ kpi }} for {{ row.label }}"><option value="">Select</option>{% for profile in ['Full hour', 'Three-quarter hour', 'Half hour', 'Quarter hour'] %}<option value="{{ profile }}" {% if row.kpis.get(kpi, '') == profile %}selected{% endif %}>{{ profile }}</option>{% endfor %}</select>{% elif selected == 'S2' and kpi == 'Hour %' %}<input class="hour-percent" data-index="{{ loop.index0 }}" name="kpi_values" value="{{ row.kpis.get(kpi, '') }}" placeholder="—" aria-label="{{ kpi }} for {{ row.label }}" readonly>{% else %}<input name="kpi_values" value="{{ row.kpis.get(kpi, '') }}" placeholder="—" aria-label="{{ kpi }} for {{ row.label }}">{% endif %}</td>{% endfor %}<td class="total-column"><input class="summary-value" value="{{ shift_totals.get(kpi) or '' }}" placeholder="—" aria-label="Summary for {{ kpi }}" readonly></td>
+                {% for row in rows %}<td>{% if selected == 'S2' and kpi == 'Hour Profile' %}<select class="hour-profile" data-index="{{ loop.index0 }}" name="kpi_values" aria-label="{{ kpi }} for {{ row.label }}"><option value="">Select</option>{% for profile in ['Full hour', 'Three-quarter hour', 'Half hour', 'Quarter hour'] %}<option value="{{ profile }}" {% if row.kpis.get(kpi, '') == profile %}selected{% endif %}>{{ profile }}</option>{% endfor %}</select>{% elif selected == 'S2' and kpi == 'Hour %' %}<input class="hour-percent" data-index="{{ loop.index0 }}" name="kpi_values" value="{{ row.kpis.get(kpi, '') }}" placeholder="—" aria-label="{{ kpi }} for {{ row.label }}" readonly>{% else %}<input name="kpi_values" value="{{ row.kpis.get(kpi, '') }}" placeholder="—" aria-label="{{ kpi }} for {{ row.label }}">{% endif %}</td>{% endfor %}<td class="total-column"><input class="summary-value" data-summary-kpi="{{ kpi }}" value="{{ shift_totals.get(kpi) or '' }}" placeholder="—" aria-label="Summary for {{ kpi }}" readonly></td>
               </tr>
               {% endfor %}
               <tr class="section-divider"><th colspan="{{ rows|length + 2 }}">Inbound volume and productivity</th></tr>
@@ -119,10 +119,20 @@
       const percent = document.querySelector(`.hour-percent[data-index="${index}"]`);
       if (profile && percent) percent.value = profileValues[profile.value] || "";
     };
+    const updateHourPercentSummary = () => {
+      const total = [...document.querySelectorAll(".hour-percent")]
+        .reduce((sum, input) => sum + (Number(input.value) || 0), 0);
+      const summary = document.querySelector('[data-summary-kpi="Hour %"]');
+      if (summary) summary.value = total ? `${total}` : "";
+    };
     document.querySelectorAll(".hour-profile").forEach((profile) => {
-      profile.addEventListener("change", () => updateHourPercent(profile.dataset.index));
+      profile.addEventListener("change", () => {
+        updateHourPercent(profile.dataset.index);
+        updateHourPercentSummary();
+      });
       updateHourPercent(profile.dataset.index);
     });
+    updateHourPercentSummary();
   </script>
   <script>
     const clock = document.getElementById("current-datetime");
