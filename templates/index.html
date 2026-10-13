@@ -83,14 +83,14 @@
               <tr class="section-divider"><th colspan="{{ rows|length + 2 }}">Inbound volume and productivity</th></tr>
               {% for kpi in kpi_names[2:8] %}
               <tr>
-                <th class="kpi-name">{{ kpi }}</th>
+                <th class="kpi-name {% if kpi in ['Volume hit/miss', 'Cumulative Volume hit/miss'] %}long-kpi{% endif %}">{{ kpi }}</th>
                 {% for row in rows %}<td><input name="kpi_values" value="{{ row.kpis.get(kpi, '') }}" placeholder="—" aria-label="{{ kpi }} for {{ row.label }}"></td>{% endfor %}<td class="total-column"><input class="summary-value" value="{{ shift_totals.get(kpi) or '' }}" placeholder="—" aria-label="Summary for {{ kpi }}" readonly></td>
               </tr>
               {% endfor %}
               <tr class="section-divider"><th colspan="{{ rows|length + 2 }}">Process productivity and staffing</th></tr>
               {% for kpi in kpi_names[8:] %}
               <tr>
-                <th class="kpi-name">{{ kpi }}</th>
+                <th class="kpi-name {% if kpi in ['Volume hit/miss', 'Cumulative Volume hit/miss'] %}long-kpi{% endif %}">{{ kpi }}</th>
                 {% for row in rows %}<td><input name="kpi_values" value="{{ row.kpis.get(kpi, '') }}" placeholder="—" aria-label="{{ kpi }} for {{ row.label }}"></td>{% endfor %}<td class="total-column"><input class="summary-value" value="{{ shift_totals.get(kpi) or '' }}" placeholder="—" aria-label="Summary for {{ kpi }}" readonly></td>
               </tr>
               {% endfor %}
