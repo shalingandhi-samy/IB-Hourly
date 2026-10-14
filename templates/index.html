@@ -22,9 +22,9 @@
     <section class="summary-bar" aria-label="Shift summary">
       <div class="summary-item site-item"><span class="summary-label">Site</span><strong>PHL5</strong></div>
       <div class="summary-item"><span class="summary-label">Shift Name</span><strong>{{ selected }}</strong></div>
-      <div class="summary-item"><span class="summary-label">28-day LP Volume</span><strong>—</strong></div>
-      <div class="summary-item"><span class="summary-label">28-day LP Total UPH</span><strong>—</strong></div>
-      <div class="summary-item"><span class="summary-label">Backlog Units</span><strong>—</strong></div>
+      <div class="summary-item editable-summary"><span class="summary-label">28-day LP Volume</span><input name="lp_volume" form="report-form" value="{{ shift_summary.get('lp_volume', '') }}" placeholder="—" aria-label="28-day LP Volume"></div>
+      <div class="summary-item editable-summary"><span class="summary-label">28-day LP Total UPH</span><input name="lp_total_uph" form="report-form" value="{{ shift_summary.get('lp_total_uph', '') }}" placeholder="—" aria-label="28-day LP Total UPH"></div>
+      <div class="summary-item editable-summary"><span class="summary-label">Backlog Units</span><input name="backlog_units" form="report-form" value="{{ shift_summary.get('backlog_units', '') }}" placeholder="—" aria-label="Backlog Units"></div>
       <div class="summary-item"><span class="summary-label">Shift Date</span><strong>{{ report_date[5:7] }}/{{ report_date[8:10] }}/{{ report_date[0:4] }}</strong></div>
       <div class="summary-item"><span class="summary-label">Shift Length</span><strong>{{ shifts[selected].length }}</strong></div>
       <div class="summary-item"><span class="summary-label">IB UPH</span><strong>—</strong></div>
@@ -61,7 +61,7 @@
       </div>
 
       {% if request.query_params.get('saved') %}<div class="success" role="status">Report saved. Tiny victory, very official.</div>{% endif %}
-      <form method="post" action="/reports/save">
+      <form id="report-form" method="post" action="/reports/save">
         <input type="hidden" name="shift" value="{{ selected }}">
         <input type="hidden" name="report_date" value="{{ report_date }}">
         <div class="table-wrap">

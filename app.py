@@ -50,6 +50,16 @@ def db():
             PRIMARY KEY (report_date, shift, block)
         )
     """)
+    connection.execute("""
+        CREATE TABLE IF NOT EXISTS shift_summary (
+            report_date TEXT NOT NULL,
+            shift TEXT NOT NULL,
+            lp_volume TEXT DEFAULT '',
+            lp_total_uph TEXT DEFAULT '',
+            backlog_units TEXT DEFAULT '',
+            PRIMARY KEY (report_date, shift)
+        )
+    """)
     return connection
 
 
@@ -100,6 +110,16 @@ def shift_totals(rows):
     return totals
 
 
+def saved_shift_summary(shift: str, report_date: str):
+    connection = db()
+    row = connection.execute(
+        "SELECT * FROM shift_summary WHERE report_date = ? AND shift = ?",
+        (report_date, shift),
+    ).fetchone()
+    connection.close()
+    return dict(row) if row else {}
+
+
 def saved_shift_notes(shift: str, report_date: str):
     connection = db()
     rows = connection.execute(
@@ -119,6 +139,7 @@ def home(request: Request, shift: str = "", report_date: str = ""):
         "request": request, "shifts": SHIFTS, "selected": selected,
         "report_date": chosen_date, "rows": rows, "kpi_names": KPI_NAMES,
         "shift_totals": shift_totals(rows), "shift_notes": saved_shift_notes(selected, chosen_date) if selected else {},
+        "shift_summary": saved_shift_summary(selected, chosen_date) if selected else {},
     })
 
 
@@ -127,6 +148,8 @@ def save_report(
     shift: str = Form(...), report_date: str = Form(...),
     hours: list[int] = Form(default=[]), kpi_values: list[str] = Form(default=[]),
     block_notes: list[str] = Form(default=[]),
+    lp_volume: str = Form(default=""), lp_total_uph: str = Form(default=""),
+    backlog_units: str = Form(default=""),
 ):
     if shift not in SHIFTS:
         return RedirectResponse("/", status_code=303)
@@ -147,6 +170,13 @@ def save_report(
             VALUES (?, ?, ?, ?)
             ON CONFLICT(report_date, shift, block) DO UPDATE SET notes=excluded.notes
         """, (report_date, shift, block, notes))
+    connection.execute("""
+        INSERT INTO shift_summary (report_date, shift, lp_volume, lp_total_uph, backlog_units)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(report_date, shift) DO UPDATE SET
+          lp_volume=excluded.lp_volume, lp_total_uph=excluded.lp_total_uph,
+          backlog_units=excluded.backlog_units
+    """, (report_date, shift, lp_volume, lp_total_uph, backlog_units))
     connection.commit()
     connection.close()
     return RedirectResponse(f"/?shift={shift}&report_date={report_date}&saved=1", status_code=303)
