@@ -1,4 +1,5 @@
-from datetime import date
+import asyncio
+from datetime import date, datetime, timedelta
 from pathlib import Path
 import sqlite3
 
@@ -6,6 +7,8 @@ from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+
+from drax_client import fetch_inbound
 
 BASE_DIR = Path(__file__).parent
 DB_PATH = BASE_DIR / "reports.db"
@@ -26,6 +29,71 @@ SHIFTS = {
 app = FastAPI(title="Inbound Hourly Report")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+DRAX_STATUS = {"state": "not run", "message": "Waiting for hourly refresh", "updated_at": ""}
+
+
+def active_shift(now: datetime):
+    weekday = now.weekday()
+    minutes = now.hour * 60 + now.minute
+    if weekday <= 3:
+        if 7 * 60 <= minutes < 17 * 60 + 30:
+            return "S1", now.date()
+        if minutes >= 18 * 60:
+            return "S2", now.date()
+        if minutes < 4 * 60 + 30:
+            return "S2", (now - timedelta(days=1)).date()
+    if weekday >= 4:
+        if 7 * 60 <= minutes < 19 * 60:
+            return "S4", now.date()
+        if minutes >= 19 * 60:
+            return "S5", now.date()
+        if minutes < 7 * 60:
+            return "S5", (now - timedelta(days=1)).date()
+    return None, now.date()
+
+
+def save_drax_values(shift: str, report_date: date, values: dict[str, str], hour: int):
+    connection = db()
+    for kpi, value in values.items():
+        connection.execute("""
+            INSERT INTO hourly_kpis (report_date, shift, hour, kpi, value)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(report_date, shift, hour, kpi) DO UPDATE SET value=excluded.value
+        """, (report_date.isoformat(), shift, hour, kpi, value))
+    connection.commit()
+    connection.close()
+
+
+async def refresh_drax():
+    now = datetime.now().replace(second=0, microsecond=0)
+    shift, report_date = active_shift(now)
+    if not shift:
+        DRAX_STATUS.update(state="skipped", message="No active inbound shift", updated_at=now.isoformat())
+        return
+    start = now - timedelta(hours=1)
+    try:
+        values = await asyncio.to_thread(fetch_inbound, start, now)
+        save_drax_values(shift, report_date, values, start.hour * 60)
+        DRAX_STATUS.update(state="connected", message=f"Updated {shift}", updated_at=now.isoformat())
+    except Exception as exc:
+        DRAX_STATUS.update(state="error", message=str(exc), updated_at=now.isoformat())
+
+
+async def drax_scheduler():
+    while True:
+        await refresh_drax()
+        await asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def start_drax_scheduler():
+    app.state.drax_task = asyncio.create_task(drax_scheduler())
+
+
+@app.on_event("shutdown")
+async def stop_drax_scheduler():
+    app.state.drax_task.cancel()
+
 
 
 def db():
@@ -140,6 +208,7 @@ def home(request: Request, shift: str = "", report_date: str = ""):
         "report_date": chosen_date, "rows": rows, "kpi_names": KPI_NAMES,
         "shift_totals": shift_totals(rows), "shift_notes": saved_shift_notes(selected, chosen_date) if selected else {},
         "shift_summary": saved_shift_summary(selected, chosen_date) if selected else {},
+        "drax_status": DRAX_STATUS,
     })
 
 
